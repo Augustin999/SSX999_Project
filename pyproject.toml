@@ -1,0 +1,12 @@
+[tool.poetry]
+name = "ssx999-project"
+version = "0.1.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "3.8.6"
+numpy = "^1.19.4"
+pandas = "^1.1.4"
+requests = "^2.24.0"
+TA-Lib = "^0.4.19"

@@ -9,21 +9,10 @@
 #       Data, parameters or functions useful in all files
 
 import numpy as np
-from pandas import Timestamp as ts
 import pandas as pd
+from pandas import Timestamp as ts
 
-QUOTE = 'EUR'
-PERIOD = '4h'
-CAPITAL = 100
-UNIVERSE = ['XBT', 'ETH', 'XMR', 'QTUM', 'ADA', 'MLN', 'ZEC']
-FEE_RATE = 0.16 / 100
-CSV_SEP = ','
-DATA_DIR = 'Historical_data\\'
-WALLET_PATH = 'wallet.pickle'
-PERFORMANCES_PATH = 'performances.csv'
-LASTS_PATH = 'lasts.pickle'
-LOG_PATH = 'logs.txt'
-DATA_COLUMNS = ['time', 'open', 'high', 'low', 'close', 'vwap', 'volume', 'count']
+import config
 
 
 def StoUnix(tsSeries):
@@ -58,83 +47,7 @@ def set_pair(base):
         Return a correct pair with any base and quote, 
         taking into consideration currencies' specificities.
         """
-        pair = 'X' + base.upper() + 'Z' + QUOTE.upper()
-        if base.upper() in SPECIAL_BASES:
-            pair = base.upper() + QUOTE.upper()
+        pair = 'X' + base.upper() + 'Z' + config.QUOTE.upper()
+        if base.upper() in config.SPECIAL_BASES:
+            pair = base.upper() + config.QUOTE.upper()
         return pair
-
-def log_error(message):
-    with open(LOG_PATH, 'wb') as f:
-        f.write('ERROR: ' + message + '\n')
-    f.close()
-    return
-
-TIME_FRAMES = {
-    '1mn': 1,
-    '5mn': 5,
-    '15mn': 15,
-    '30mn': 30,
-    '1h': 60,
-    '4h': 240,
-    '1d': 1440,
-    '1w': 10080,
-    '15d': 21600
-}
-
-BASES = [
-    'ETC', 'XMR', 'QTUM', 'ATOM',
-    'XLM', 'DAI', 'XRP', 'LINK',
-    'PAXG', 'GNO', 'REP', 'XDG',
-    'MLN', 'ETH', 'ADA', 'BAT',
-    'LSK', 'TRX', 'DASH', 'XTZ',
-    'NANO', 'XBT', 'LTC', 'SC',
-    'WAVES', 'ALGO', 'EOS', 'OMG',
-    'BCH', 'ICX', 'ZEC'
-]
-
-SPECIAL_BASES = [
-    'QTUM', 'ATOM', 'LINK', 'PAXG',
-    'GNO', 'XDG', 'ADA', 'BAT',
-    'LSK', 'TRX', 'DASH', 'XTZ',
-    'NANO', 'WAVES', 'SC', 'ALGO',
-    'EOS', 'OMG', 'BCH', 'ICX', 'DAI'
-]
-
-API_PUBLIC = {
-    'Time',
-    'Assets',
-    'AssetPairs',
-    'Ticker',
-    'OHLC',
-    'Depth',
-    'Trades',
-    'Spread'
-}
-
-API_PRIVATE = {
-    'Balance',
-    'TradeBalance',
-    'OpenOrders',
-    'ClosedOrders',
-    'QueryOrders',
-    'TradesHistory',
-    'QueryTrades',
-    'OpenPositions',
-    'Ledgers',
-    'QueryLedgers',
-    'RemoveExport',
-    'GetWebSocketsToken'
-}
-
-API_TRADING = {'AddOrder', 'CancelOrder'}
-
-API_FUNDING = {
-    'DepositMethods',
-    'DepositAddresses',
-    'DepositStatus',
-    'WithdrawInfo',
-    'Withdraw',
-    'WithdrawStatus',
-    'WithdrawCancel',
-    'WalletTransfer'
-}

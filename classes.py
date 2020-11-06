@@ -1,10 +1,12 @@
+import time as tm
+
 import numpy as np
 import pandas as pd
-import time as tm
-import pickle
 
-import utils
+import config
 import dataManager
+import utils
+
 
 class Currency(object):
 
@@ -110,7 +112,7 @@ class Wallet(object):
 
         #  persist performances
         performances = pd.DataFrame(perf_data, index=[0])
-        performances.to_csv(utils.PERFORMANCES_PATH, sep=utils.CSV_SEP, encoding='utf-8')
+        performances.to_csv(config.performances_path, sep=config.CSV_SEP, encoding='utf-8')
 
         return
 
@@ -144,7 +146,7 @@ class Wallet(object):
         performances = pd.DataFrame(perf_data, index=[0])
 
         #  Load previous performances
-        previous_performances = pd.read_csv(utils.PERFORMANCES_PATH, sep=utils.CSV_SEP)
+        previous_performances = pd.read_csv(config.performances_path, sep=config.CSV_SEP)
         
         #  Merge previous and fresh performances, and then persist them
         performances = previous_performances.append(performances, ignore_index=True)
@@ -152,6 +154,6 @@ class Wallet(object):
         col1 = cols[0]
         cols.remove(col1)       
         performances = performances[cols]
-        performances.to_csv(utils.PERFORMANCES_PATH, sep=utils.CSV_SEP, encoding='utf-8')
+        performances.to_csv(config.performances_path, sep=config.CSV_SEP, encoding='utf-8')
 
         return

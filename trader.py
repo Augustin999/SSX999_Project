@@ -19,142 +19,112 @@
         # store performances & wallet composition
         # erase any unecessary variable left
 
-import numpy as np
-import pandas as pd
+import logging
 import pickle
-import os
 
-from classes import Wallet, Currency
-import utils
-import dataManager
 import analyzer
+import config
+import dataManager
+import utils
+from classes import Wallet
 
-if __name__ == '__main__':
+logger = logging.getLogger('trader')
+logger.setLevel(logging.DEBUG)
 
-    # Case : initializing the algorithm
-    if not os.path.exists(utils.WALLET_PATH):
 
-        print('Initializing a new trading bot')
+def init_trading_bot():
+    logger.info('Initializing a new trading bot')
 
-        #  Create a new wallet and save it
-        structure = {
-            'initialize': True,
-            'capital': utils.CAPITAL,
-            'universe': utils.UNIVERSE
-        }
-        wallet = Wallet(structure)
-        wallet.create_performances()
-        dataManager.save_wallet(wallet)
+    if not config.generated_data_dir.exists():
+        config.generated_data_dir.mkdir()
+    if not config.data_dir.exists():
+        config.data_dir.mkdir()
 
-        # pull data from api
-        universe_lasts = dict()
-        for base in wallet.universe:
-            last = dataManager.pull_OHLC_data(base)
-            universe_lasts[base] = last
+    #  Create a new wallet and save it
+    structure = {
+        'initialize': True,
+        'capital': config.CAPITAL,
+        'universe': config.UNIVERSE
+    }
+    wallet = Wallet(structure)
+    wallet.create_performances()
+    dataManager.save_wallet(wallet)
 
-        # store lasts
-        with open(utils.LASTS_PATH, 'wb') as f_lasts:
-            pickle.dump(universe_lasts, f_lasts)
-        
-        #  delete any unecessary variable left to preserve memory
-        del(structure)
-        del(wallet)
-        del(last)
-        del(universe_lasts)
+    # pull data from api
+    universe_lasts = dict()
+    for base in wallet.universe:
+        last = dataManager.pull_OHLC_data(base)
+        universe_lasts[base] = last
 
-        #  inform of successful initialization
-        print('Initialisation: completed')
+    # store lasts
+    with open(config.lasts_path, 'wb') as f_lasts:
+        pickle.dump(universe_lasts, f_lasts)
+
+    #  inform of successful initialization
+    logger.info('Initialisation: completed')
+
+
+def update_trading_bot():
+    #  first, check if time is right according to timescale
+    logger.info('Checking time exactitude')
+
+    #  load existing wallet
+    wallet = dataManager.load_wallet() 
     
+    for base in wallet.universe:
+        #  load previous OHLC data from csv file
+        data = dataManager.load_OHLC_data(base)
+        universe_lasts = pickle.load(open(config.lasts_path, 'rb'))
 
-    # Case : algorithm already initialized
-    else:
-        #  first, check if time is right according to timescale
-        print('Checking time exactitude')
+        #  update OHLC data
+        previous_last = universe_lasts[base]
+        logger.info(utils.toTs(previous_last))
+        data, last = dataManager.update_OHLC_data(base, data, previous_last)
+        logger.info(utils.toTs(last))
 
-        #  load existing wallet
-        wallet = dataManager.load_wallet() 
+        #  if last did not change, abort and wait for new candle
+        if previous_last >= last:
+            logger.error('Time not corresponding')
+            break
+
+        universe_lasts[base] = last
+        dataManager.update_OHLC_data_csv(base, data)
         
-        for base in wallet.universe:
-            #  load previous OHLC data from csv file
-            data = dataManager.load_OHLC_data(base)
-            universe_lasts = pickle.load(open(utils.LASTS_PATH, 'rb'))
+        # compute indicators on data
+        data = analyzer.compute_indicators(data)
 
-            #  update OHLC data
-            previous_last = universe_lasts[base]
-            print(utils.toTs(last))
-            data, last = dataManager.update_OHLC_data(base, data, previous_last)
+        # prepare data features required for strategy
+        if wallet.currencies[base].buyable():
+            position = 0
+        else:
+            position = 1
 
-            #  if last did not change, abort and wait for new candle
-            if previous_last >= last:
-                utils.log_error('Time not corresponding')
-                break
-
-            universe_lasts[base] = last
-            dataManager.update_OHLC_data_csv(base, data)
-            
-            # compute indicators on data
-            data = analyzer.compute_indicators(data)
-
-            # prepare data features required for strategy
-            if wallet.currencies[base].buyable():
-                position = 0
-            else:
-                position = 1
-
-            features = {
-                    'HA_open': data['HA_open'].values[-1],
-                    'HA_close': data['HA_close'].values[-1],
-                    'mfi_prev': data['mfi'].values[-2],
-                    'mfi_curr': data['mfi'].values[-1],
-                    'lastPosition': position
-                }
-            
-            # compute strategy
-            new_position = analyzer.strategy_HA_MFI(features)
-
-            # execute orders
-            if new_position == 1:
-                wallet.currencies[base].buy()
-                #  If previous position was 1 too, buy() will automatically not create a new order
-            elif new_position == 0:
-                wallet.currencies[base].sell()
-                #  If previous position was 0 too, buy() will automatically not create a new order
-
-        # persist the wallet's new composition and the lasts values
-        dataManager.save_wallet(wallet)
-        with open(utils.LASTS_PATH, 'wb') as f_lasts:
-            pickle.dump(universe_lasts, f_lasts)
-
-        # store performances
-        wallet.update_performances()
+        features = {
+                'HA_open': data['HA_open'].values[-1],
+                'HA_close': data['HA_close'].values[-1],
+                'mfi_prev': data['mfi'].values[-2],
+                'mfi_curr': data['mfi'].values[-1],
+                'lastPosition': position
+            }
         
-        #  delete any unecessary variable left to preserve memory
-        del(wallet)
-        del(features)
-        del(data)
-        del(position)
-        del(new_position)
-        del(universe_lasts)
-        del(last)
+        # compute strategy
+        new_position = analyzer.strategy_HA_MFI(features)
 
-        #  Inform of the bot's process complleted normally
-        print('Strategy performed successfully')
+        # execute orders
+        if new_position == 1:
+            wallet.currencies[base].buy()
+            #  If previous position was 1 too, buy() will automatically not create a new order
+        elif new_position == 0:
+            wallet.currencies[base].sell()
+            #  If previous position was 0 too, buy() will automatically not create a new order
 
+    # persist the wallet's new composition and the lasts values
+    dataManager.save_wallet(wallet)
+    with open(config.lasts_path, 'wb') as f_lasts:
+        pickle.dump(universe_lasts, f_lasts)
 
+    # store performances
+    wallet.update_performances()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
+    #  Inform of the bot's process complleted normally
+    logger.info('Strategy performed successfully')
