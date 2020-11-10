@@ -1,6 +1,10 @@
-import talib as ta
 import pandas as pd
 import numpy as np
+
+from ta.volatility import average_true_range
+from ta.trend import ema_indicator, macd, macd_signal, macd_diff
+from ta.momentum import rsi
+from ta.volume import money_flow_index, on_balance_volume
 
 def strategy_HA_MFI(features):
     """
@@ -59,48 +63,52 @@ def Heiken_Ashi(df0):
 
 def RSI(df0):
     df = df0
-    df['rsi'] = ta.RSI(df['close'].values, 10)
+    df['rsi'] = rsi(df['close'], n=10, fillna=False)
     return df
 
 def MFI(df0):
     df = df0
-    df['mfi'] = ta.MFI(df['high'].values, df['low'].values,
-                    df['close'].values, df['volume'].values, 14)
+    df['mfi'] = money_flow_index(
+        df['high'],
+        df['low'],
+        df['close'],
+        df['volume'],
+        n=14,
+        fillna=False
+    )
     return df
 
 def EMA_fast(df0):
     df = df0
-    df['ema_fast'] = ta.EMA(df['close'].values, 14)
+    df['ema_fast'] = ema_indicator(df['close'], n=14, fillna=False)
     return df
 
 def EMA_slow(df0):
     df = df0
-    df['ema_slow'] = ta.EMA(df['close'].values, 70)
-    return df
-
-def NATR(df0):
-    df = df0
-    df['natr'] = ta.NATR(
-        np.array(df['high'].values),
-        np.array(df['low'].values),
-        np.array(df['close'].values),
-        14)
+    df['ema_slow'] = ema_indicator(df['close'], n=70, fillna=False)
     return df
 
 def ATR(df0):
     df = df0
-    df['atr'] = ta.ATR(df['high'].values, df['low'].values, df['close'].values, 14)
+    df['atr'] = average_true_range(
+        df['high'],
+        df['low'],
+        df['low'],
+        n=14,
+        fillna=False
+    )
     return df
 
 def MACD(df0):
     df = df0
-    df['macd'], df['macd_signal'], df['macd_hist'] = ta.MACD(df['close'].values)
+    df['macd'] = macd(df['close'], n_slow=26, n_fast=12, fillna=False)
+    df['macd_signal'] = macd_signal(df['close'], n_slow=26, n_fast=12, n_sign=9, fillna=False)
+    df['macd_hist'] = macd_diff(df['close'], n_slow=26, n_fast=12, n_sign=9, fillna=False)
     return df
 
 def OBV(df0):
     df = df0
-    df['obv'] = ta.OBV(df['close'].values, df['volume'].values)
-    df['d_obv'] = df['obv'].pct_change()
+    df['obv'] = on_balance_volume(df['close'], df['volume'], fillna=False)
     return df
 
 def AD(df0):
