@@ -38,7 +38,6 @@ def strategy_HA_MFI(features):
     return newPosition
 
 def compute_indicators(df):
-    df_OHLC = NATR(df)
     df_OHLC = ATR(df_OHLC)
     df_OHLC = EMA_fast(df_OHLC)
     df_OHLC = EMA_slow(df_OHLC)
@@ -47,7 +46,6 @@ def compute_indicators(df):
     df_OHLC = MFI(df_OHLC)
     df_OHLC = MACD(df_OHLC)
     df_OHLC = OBV(df_OHLC)
-    df_OHLC = AD(df_OHLC)
     df_OHLC = CloseStd(df_OHLC)
 
     return df_OHLC
@@ -109,12 +107,6 @@ def MACD(df0):
 def OBV(df0):
     df = df0
     df['obv'] = on_balance_volume(df['close'], df['volume'], fillna=False)
-    return df
-
-def AD(df0):
-    df = df0
-    df['ad'] = ta.AD(df['high'].values, df['low'].values,
-                    df['close'].values, df['volume'].values)
     return df
 
 def CloseStd(df0):
