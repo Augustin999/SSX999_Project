@@ -38,7 +38,7 @@ def strategy_HA_MFI(features):
     return newPosition
 
 def compute_indicators(df):
-    df_OHLC = ATR(df_OHLC)
+    df_OHLC = ATR(df)
     df_OHLC = EMA_fast(df_OHLC)
     df_OHLC = EMA_slow(df_OHLC)
     df_OHLC = Heiken_Ashi(df_OHLC)
