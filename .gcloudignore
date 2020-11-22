@@ -15,3 +15,8 @@
 
 node_modules
 #!include:.gitignore
+
+pyproject.toml
+Makefile
+poetry.lock
+README.md

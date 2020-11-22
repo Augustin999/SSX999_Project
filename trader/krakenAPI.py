@@ -5,11 +5,11 @@ import json
 import time as tm
 import urllib
 import urllib.request as urllib2
+from pandas.core import api
 
 import requests as re
 
-import config
-import utils
+from trader import config, utils
 
 
 def request(api_method, api_data):
@@ -27,14 +27,13 @@ def request(api_method, api_data):
         api_data = urllib.parse.urlencode(api_data)
 
         try:
-            api_key = open("API_Public_Key").read().strip()
-            api_secret = base64.b64decode(
-                open("API_Private_Key").read().strip()
-            )
+            api_key = utils.read_file(path=config.public_key)
+            api_secret_encoded = utils.read_file(path=config.private_key)
 
         except:
             raise KeysConfigException()
         
+        api_secret = base64.b64decode(api_secret_encoded)
         api_postdata = api_data + '&nonce=' + api_nonce
         api_postdata = api_postdata.encode('utf-8')
         api_sha256 = hashlib.sha256(api_nonce.encode('utf-8') + api_postdata).digest()
@@ -148,6 +147,7 @@ def ticker(base):
     except:
         return ticker(base)
 
+
 def add_order(api_data):
     """
     Add standard order.
@@ -168,6 +168,7 @@ def add_order(api_data):
     api_method = 'AddOrder'
     api_reply = request(api_method, api_data)
     return api_reply
+
 
 def OHLC(base, since=0):
     """

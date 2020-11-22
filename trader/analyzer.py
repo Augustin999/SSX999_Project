@@ -1,10 +1,8 @@
-import pandas as pd
-import numpy as np
-
 from ta.volatility import average_true_range
 from ta.trend import ema_indicator, macd, macd_signal, macd_diff
 from ta.momentum import rsi
 from ta.volume import money_flow_index, on_balance_volume
+
 
 def strategy_HA_MFI(features):
     """
@@ -37,6 +35,7 @@ def strategy_HA_MFI(features):
     
     return newPosition
 
+
 def compute_indicators(df):
     df_OHLC = ATR(df)
     df_OHLC = EMA_fast(df_OHLC)
@@ -50,6 +49,7 @@ def compute_indicators(df):
 
     return df_OHLC
 
+
 def Heiken_Ashi(df0):
     df = df0
     df['HA_open'] = round((df['open'].shift(1) + df['close'].shift(1))/2, 4)
@@ -59,10 +59,12 @@ def Heiken_Ashi(df0):
         (df['open'] + df['high'] + df['low'] + df['close'])/4, 4)
     return df
 
+
 def RSI(df0):
     df = df0
     df['rsi'] = rsi(df['close'], n=10, fillna=False)
     return df
+
 
 def MFI(df0):
     df = df0
@@ -76,15 +78,18 @@ def MFI(df0):
     )
     return df
 
+
 def EMA_fast(df0):
     df = df0
     df['ema_fast'] = ema_indicator(df['close'], n=14, fillna=False)
     return df
 
+
 def EMA_slow(df0):
     df = df0
     df['ema_slow'] = ema_indicator(df['close'], n=70, fillna=False)
     return df
+
 
 def ATR(df0):
     df = df0
@@ -97,6 +102,7 @@ def ATR(df0):
     )
     return df
 
+
 def MACD(df0):
     df = df0
     df['macd'] = macd(df['close'], n_slow=26, n_fast=12, fillna=False)
@@ -104,10 +110,12 @@ def MACD(df0):
     df['macd_hist'] = macd_diff(df['close'], n_slow=26, n_fast=12, n_sign=9, fillna=False)
     return df
 
+
 def OBV(df0):
     df = df0
     df['obv'] = on_balance_volume(df['close'], df['volume'], fillna=False)
     return df
+
 
 def CloseStd(df0):
     df = df0

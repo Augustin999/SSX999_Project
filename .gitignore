@@ -5,6 +5,4 @@ generated_data/
 historical_data/
 API_Private_Key
 API_Public_Key
-lasts.pickle
-performances.csv
-wallet.pickle
+.DS_Store

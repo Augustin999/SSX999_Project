@@ -3,9 +3,7 @@ import time as tm
 import numpy as np
 import pandas as pd
 
-import config
-import dataManager
-import utils
+from trader import config, dataManager, utils
 
 
 class Currency(object):
@@ -112,9 +110,7 @@ class Wallet(object):
 
         #  persist performances
         performances = pd.DataFrame(perf_data, index=[0])
-        performances.to_csv(config.performances_path, sep=config.CSV_SEP, encoding='utf-8')
-
-        return
+        utils.dump_as_csv(content=performances, path=config.performances_path)
 
     def update_performances(self):
         """
@@ -152,8 +148,6 @@ class Wallet(object):
         performances = previous_performances.append(performances, ignore_index=True)
         cols = list(performances.columns)
         col1 = cols[0]
-        cols.remove(col1)       
+        cols.remove(col1)
         performances = performances[cols]
-        performances.to_csv(config.performances_path, sep=config.CSV_SEP, encoding='utf-8')
-
-        return
+        utils.dump_as_csv(content=performances, path=config.performances_path)

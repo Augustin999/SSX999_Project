@@ -1,13 +1,38 @@
+import os
 from pathlib import Path
+from pathy import Pathy
+from trader import env
 
 
-data_dir = Path('historical_data')
-generated_data_dir = Path('generated_data')
+def get_var(key: str):
+    return os.environ.get(key)
 
-wallet_path = generated_data_dir / 'wallet.pickle'
-performances_path = generated_data_dir / 'performances.csv'
+
+keys_path = Path('keys')
+data_path = Path('historical_data')
+generated_data_path = Path('generated_data')
+
+if env.is_local():
+    keys_dir = keys_path
+    data_dir = data_path
+    generated_data_dir = generated_data_path
+else:
+    gcs_bucket = get_var('GCP_BUCKET')
+    bucket_dir = Pathy(f'gs://{gcs_bucket}')
+
+    keys_dir = bucket_dir / keys_path
+    data_dir = bucket_dir / data_path
+    generated_data_dir = bucket_dir / generated_data_path
+
+
+wallet_filename = 'wallet.pickle'
+wallet_path = generated_data_dir / wallet_filename
 lasts_path = generated_data_dir / 'lasts.pickle'
-log_path = generated_data_dir / 'logs.txt'
+performances_path = generated_data_dir / 'performances.csv'
+
+public_key =  keys_dir / 'API_Public_Key'
+private_key = keys_dir / 'API_Private_Key'
+
 
 QUOTE = 'EUR'
 PERIOD = '4h'

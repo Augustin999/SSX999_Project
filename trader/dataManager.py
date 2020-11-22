@@ -1,10 +1,6 @@
-import pickle
-
 import pandas as pd
 
-import config
-import krakenAPI
-import utils
+from trader import config, krakenAPI, utils
 
 
 def buy(base, nEur, post=True):
@@ -42,6 +38,7 @@ def buy(base, nEur, post=True):
 
     return price
 
+
 def sell(base, nBase, post=True):
     """
     Execute a buy order with the following specs :
@@ -75,6 +72,7 @@ def sell(base, nBase, post=True):
     krakenAPI.add_order(api_data)
     return price
 
+
 def get_price(base):
     """
     Returns the average between bid and ask, as a price.
@@ -84,18 +82,6 @@ def get_price(base):
     price = (ask + bid) / 2
     return price
 
-def save_wallet(wallet):
-    """
-    Persist the wallet.
-    """
-    pickle.dump(wallet, open(config.wallet_path,"wb"))
-    return
-
-def load_wallet():
-    """
-    Load an existing wallet.
-    """
-    return pickle.load(open(config.wallet_path, "rb"))
 
 def pull_OHLC_data(base):
     # get data from api
@@ -107,10 +93,10 @@ def pull_OHLC_data(base):
     # store data into csv file
     pair = utils.set_pair(base)
     filename = pair + config.PERIOD + '.csv'
-    path = config.data_dir / filename
-    df_data.to_csv(path, sep=config.CSV_SEP, encoding='utf-8')
+    utils.dump_as_csv(content=df_data, path=config.data_dir / filename)
 
     return last
+
 
 def load_OHLC_data(base):
     """
@@ -122,6 +108,7 @@ def load_OHLC_data(base):
     data = pd.read_csv(path, sep=config.CSV_SEP)
     data.set_index('time', inplace=True)
     return data
+
 
 def update_OHLC_data(base, data, last):
     """
@@ -142,9 +129,8 @@ def update_OHLC_data(base, data, last):
     
     return data, new_last
 
+
 def update_OHLC_data_csv(base, data):
     pair = utils.set_pair(base)
     filename = pair + config.PERIOD + '.csv'
-    path = config.data_dir / filename
-    data.to_csv(path, sep=config.CSV_SEP, encoding='utf-8')
-    return
+    utils.dump_as_csv(content=data, path=config.data_dir / filename)

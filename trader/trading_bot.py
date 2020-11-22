@@ -22,11 +22,8 @@
 import logging
 import pickle
 
-import analyzer
-import config
-import dataManager
-import utils
-from classes import Wallet
+from trader import analyzer, config, dataManager, utils
+from trader.models import Wallet
 
 logger = logging.getLogger('trader')
 logger.setLevel(logging.DEBUG)
@@ -48,7 +45,7 @@ def init_trading_bot():
     }
     wallet = Wallet(structure)
     wallet.create_performances()
-    dataManager.save_wallet(wallet)
+    utils.dump_as_pickle(content=wallet, path=config.wallet_path)
 
     # pull data from api
     universe_lasts = dict()
@@ -57,8 +54,7 @@ def init_trading_bot():
         universe_lasts[base] = last
 
     # store lasts
-    with open(config.lasts_path, 'wb') as f_lasts:
-        pickle.dump(universe_lasts, f_lasts)
+    utils.dump_as_pickle(content=universe_lasts, path=config.lasts_path)
 
     #  inform of successful initialization
     logger.info('Initialisation: completed')
@@ -69,12 +65,12 @@ def update_trading_bot():
     logger.info('Checking time exactitude')
 
     #  load existing wallet
-    wallet = dataManager.load_wallet() 
+    wallet = utils.load_pickle(path=config.wallet_path)
     
     for base in wallet.universe:
         #  load previous OHLC data from csv file
         data = dataManager.load_OHLC_data(base)
-        universe_lasts = pickle.load(open(config.lasts_path, 'rb'))
+        universe_lasts = utils.load_pickle(path=config.lasts_path)
 
         #  update OHLC data
         previous_last = universe_lasts[base]
@@ -119,9 +115,8 @@ def update_trading_bot():
             #  If previous position was 0 too, buy() will automatically not create a new order
 
     # persist the wallet's new composition and the lasts values
-    dataManager.save_wallet(wallet)
-    with open(config.lasts_path, 'wb') as f_lasts:
-        pickle.dump(universe_lasts, f_lasts)
+    utils.dump_as_pickle(content=wallet, path=config.wallet_path)
+    utils.dump_as_pickle(content=universe_lasts, path=config.lasts_path)
 
     # store performances
     wallet.update_performances()
