@@ -2,9 +2,7 @@
 #
 # Augustin BRISSART
 # Github: @augustin999
-#
-#
-# main.py
+
 
 from trader import config
 from trader.trading_bot import init_trading_bot, update_trading_bot

@@ -1,51 +1,63 @@
-from ta.volatility import average_true_range
-from ta.trend import ema_indicator, macd, macd_signal, macd_diff
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999
+
+
+from ta.volatility import average_true_range, bollinger_mavg, bollinger_hband, bollinger_lband
+from ta.trend import ema_indicator, macd, macd_signal, macd_diff, cci
 from ta.momentum import rsi
 from ta.volume import money_flow_index, on_balance_volume
 
 
-def strategy_HA_MFI(features):
+def strategy_CCI(features):
     """
     Analyze a given set of candle and corresponding indicators.
     Return a position (0 or 1).
 
+    Works well on 4h timeframe
+
     Inputs:
         features : dictionary
-            'HA_open' : current Heikin-Ashi open
-            'HA_close' : current Heikin-Ashi close
-            'mfi_prev' : previous MFI index value
-            'mfi_curr' : current MFI index value
-            'lastPosition' : latest Position value (0 or 1)
+            'HA_close_current' : current Heikin-Ashi close price
+            'HA_open_current' : current Heikin-Ashi open price
+            'ema_current' : current EMA4
+            'bollinger_center_previous': previous Bollinger moving average value (window = 160)
+            'bollinger_center_current' : current Bollinger moving average value (window = 160)
+            'cci_previous' : previous Commodity Channel Index value (window = 160) transformed by an EMA4
+            'cci_current' : current Commodity Channel Index values (window = 160) transformed by an EMA4
+            'last_position' : latest Position value (0 or 1)
         
     Results :
         Next position to hold
     """
 
-    # Buy case
-    if features['HA_close'] >= features['HA_open'] and features['mfi_curr'] > 70 and features['mfi_prev'] <= 70:
-        newPosition = 1
-
-    # Sell case
-    elif features['HA_close'] <= features['HA_open'] and features['mfi_curr'] <= 30 and features['mfi_prev'] > 30:
-        newPosition = 0
-
-    # Stay case
+    if features['HA_close_current'] >= features['HA_open_current']:
+        current_color = 'green'
     else:
-        newPosition = features['lastPosition']
+        current_color = 'red'
+
+    new_position = features['last_position']
+
+    if features['last_position'] == 0 and current_color == 'green' and features['ema_current'] > features['bollinger_center_current']:
+        # Reason to buy validated => waiting for trigger
+        if features['cci_previous'] <= 100 and features['cci_current'] > 100:
+            new_position = 1
+        
+
+    if features['last_position'] == 1 and features['ema_previous'] >= features['bollinger_center_previous'] and features['ema_current'] < features['bollinger_center_current']:
+        new_position = 0
     
-    return newPosition
+    return new_position
+
 
 
 def compute_indicators(df):
-    df_OHLC = ATR(df)
-    df_OHLC = EMA_fast(df_OHLC)
-    df_OHLC = EMA_slow(df_OHLC)
+    df_OHLC = df
+    df_OHLC = EMA(df_OHLC)
     df_OHLC = Heiken_Ashi(df_OHLC)
-    df_OHLC = RSI(df_OHLC)
-    df_OHLC = MFI(df_OHLC)
-    df_OHLC = MACD(df_OHLC)
-    df_OHLC = OBV(df_OHLC)
-    df_OHLC = CloseStd(df_OHLC)
+    df_OHLC = CCI(df_OHLC)
+    df_OHLC = Bollinger(df_OHLC)
 
     return df_OHLC
 
@@ -53,16 +65,35 @@ def compute_indicators(df):
 def Heiken_Ashi(df0):
     df = df0
     df['HA_open'] = round((df['open'].shift(1) + df['close'].shift(1))/2, 4)
-    df['HA_high'] = round(df[['high', 'open', 'close']].max(axis=1), 4)
-    df['HA_low'] = round(df[['low', 'open', 'close']].min(axis=1), 4)
-    df['HA_close'] = round(
-        (df['open'] + df['high'] + df['low'] + df['close'])/4, 4)
+    df['HA_close'] = round((df['open'] + df['high'] + df['low'] + df['close'])/4, 4)
+    df['HA_high'] = round(df[['high', 'HA_open', 'HA_close']].max(axis=1), 4)
+    df['HA_low'] = round(df[['low', 'HA_open', 'HA_close']].min(axis=1), 4)
     return df
 
 
+def CCI(df0, n=160):
+    df = df0
+    df['cci'] = ema_indicator(cci(df['high'], df['low'], df['close'], n, 0.015, fillna=False), 4, fillna=False)
+    return df
+
+
+def EMA(df0, n=4):
+    df = df0
+    df['ema'] = ema_indicator(df['close'], n, fillna=False)
+    return df
+
+
+def Bollinger(df0, n=160):
+    df = df0
+    df['bollinger_center'] = bollinger_mavg(df['close'], n, fillna=False)
+    df['bollinger_upper'] = bollinger_hband(df['close'], n, fillna=False)
+    df['bollinger_lower'] = bollinger_lband(df['close'], n, fillna=False)
+    return df
+    
+
 def RSI(df0):
     df = df0
-    df['rsi'] = rsi(df['close'], n=10, fillna=False)
+    df['rsi'] = rsi(df['close'], 10, fillna=False)
     return df
 
 
@@ -73,21 +104,9 @@ def MFI(df0):
         df['low'],
         df['close'],
         df['volume'],
-        n=14,
+        14,
         fillna=False
     )
-    return df
-
-
-def EMA_fast(df0):
-    df = df0
-    df['ema_fast'] = ema_indicator(df['close'], n=14, fillna=False)
-    return df
-
-
-def EMA_slow(df0):
-    df = df0
-    df['ema_slow'] = ema_indicator(df['close'], n=70, fillna=False)
     return df
 
 
@@ -97,7 +116,7 @@ def ATR(df0):
         df['high'],
         df['low'],
         df['low'],
-        n=14,
+        14,
         fillna=False
     )
     return df

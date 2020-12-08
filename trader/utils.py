@@ -1,12 +1,8 @@
 # SSX999 Project
-
+#
 # Augustin BRISSART
 # Github: @augustin999
 
-
-# utils.py
-
-#       Data, parameters or functions useful in all files
 
 import pickle
 from typing import Union
@@ -50,7 +46,9 @@ def read_file(path: Union[Path, Pathy]):
     if env.is_local():
         with open(path, 'r') as _file:
             return _file.read().strip()
-    raise NotImplementedError
+    blob = get_blob(path=f'{config.keys_dir.name}/{path.name}')
+    _file = blob.download_as_string()
+    return _file.read().strip()
 
 
 def dump_as_csv(content: pd.DataFrame, path: Union[Path, Pathy]):

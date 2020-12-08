@@ -1,3 +1,9 @@
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999w
+
+
 import pandas as pd
 
 from trader import config, krakenAPI, utils

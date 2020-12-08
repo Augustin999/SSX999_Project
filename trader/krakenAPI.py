@@ -1,3 +1,9 @@
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999
+
+
 import base64
 import hashlib
 import hmac
@@ -6,7 +12,6 @@ import time as tm
 import urllib
 import urllib.request as urllib2
 from pandas.core import api
-
 import requests as re
 
 from trader import config, utils
@@ -72,17 +77,17 @@ def request(api_method, api_data):
     return api_reply
 
 
-class ApiErrorException(Exception):
-    ...
+# class ApiErrorException(Exception):
+#     ...
 
 
-class ApiMethodDontExistException(Exception):
-    ...
+# class ApiMethodDontExistException(Exception):
+#     ...
 
 
-class KeysConfigException(Exception):
-    def __init__(self):
-        self.message = "API public key and API private (secret) key must be in text files called API_Public_Key and API_Private_Key"
+# class KeysConfigException(Exception):
+#     def __init__(self):
+#         self.message = "API public key and API private (secret) key must be in text files called API_Public_Key and API_Private_Key"
 
 
 def ticker(base):

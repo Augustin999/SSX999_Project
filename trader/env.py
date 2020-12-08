@@ -1,3 +1,8 @@
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999
+
 
 import os
 

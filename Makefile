@@ -2,18 +2,19 @@
 
 .PHONY: extract-dependencies deploy-cloud-function deploy-scheduler-job deploy
 
-
-GCP_PROJECT_ID="<YOUR_PROJECT_ID>"
-GCP_SERVICE_ACCOUNT="<YOUR_SERVICE_ACCOUNT>"
-GCP_BUCKET="<YOUR_BUCKET>"
-GCP_REGION="europe-west1"
+# ----- personal settings -----
+GCP_PROJECT_ID="<PROJECT-ID>"
+GCP_SERVICE_ACCOUNT="<SERVICE-ACCOUNT-NAME"
+GCP_BUCKET="<BUCKET-NAME>"
+GCP_REGION="europe-west6"
+SCHEDULE="1 */4 * * *"
+# ----- ----------------- -----
 
 FUNCTION_NAME="trader"
 TOPIC_NAME="trader_topic"
 CODE_ENTRYPOINT=main
 
 JOB_NAME="trader_job"
-SCHEDULE="0 8,12,16 * * *"
 MESSAGE_BODY="Run successful"
 
 update-requirements:

@@ -1,5 +1,10 @@
-import time as tm
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999
+ 
 
+import time as tm
 import numpy as np
 import pandas as pd
 
@@ -53,6 +58,10 @@ class Currency(object):
             self.price = dataManager.sell(self.name, self.nBase)
             self.nEur = self.nBase * self.price
             self.nBase = 0
+        return
+
+    def update_price(self):
+        self.price = dataManager.get_price(self.name)
         return
 
 

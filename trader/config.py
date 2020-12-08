@@ -1,3 +1,9 @@
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999
+
+
 import os
 from pathlib import Path
 from pathy import Pathy
@@ -37,7 +43,7 @@ private_key = keys_dir / 'API_Private_Key'
 QUOTE = 'EUR'
 PERIOD = '4h'
 CAPITAL = 100
-UNIVERSE = ['XBT', 'ETH', 'XMR', 'QTUM', 'ADA', 'MLN', 'ZEC']
+UNIVERSE = ['ADA', 'ETH', 'XBT', 'XTZ', 'WAVES', 'EOS']
 DATA_COLUMNS = ['time', 'open', 'high', 'low', 'close', 'vwap', 'volume', 'count']
 FEE_RATE = 0.16 / 100
 CSV_SEP = ','

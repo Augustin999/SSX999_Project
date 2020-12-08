@@ -12,6 +12,8 @@
 # below:
 .git
 .gitignore
+API_Private_Key
+API_Public_Key
 
 node_modules
 #!include:.gitignore
