@@ -1,0 +1,8 @@
+.vscode/
+__pycache__/
+
+generated_data/
+historical_data/
+API_Private_Key
+API_Public_Key
+.DS_Store

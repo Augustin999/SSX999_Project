@@ -1,10 +1,15 @@
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999
+ 
+
+import time as tm
 import numpy as np
 import pandas as pd
-import time as tm
-import pickle
 
-import utils
-import dataManager
+from trader import config, dataManager, utils
+
 
 class Currency(object):
 
@@ -53,6 +58,10 @@ class Currency(object):
             self.price = dataManager.sell(self.name, self.nBase)
             self.nEur = self.nBase * self.price
             self.nBase = 0
+        return
+
+    def update_price(self):
+        self.price = dataManager.get_price(self.name)
         return
 
 
@@ -110,9 +119,7 @@ class Wallet(object):
 
         #  persist performances
         performances = pd.DataFrame(perf_data, index=[0])
-        performances.to_csv(utils.PERFORMANCES_PATH, sep=utils.CSV_SEP, encoding='utf-8')
-
-        return
+        utils.dump_as_csv(content=performances, path=config.performances_path)
 
     def update_performances(self):
         """
@@ -144,14 +151,12 @@ class Wallet(object):
         performances = pd.DataFrame(perf_data, index=[0])
 
         #  Load previous performances
-        previous_performances = pd.read_csv(utils.PERFORMANCES_PATH, sep=utils.CSV_SEP)
+        previous_performances = pd.read_csv(config.performances_path, sep=config.CSV_SEP)
         
         #  Merge previous and fresh performances, and then persist them
         performances = previous_performances.append(performances, ignore_index=True)
         cols = list(performances.columns)
         col1 = cols[0]
-        cols.remove(col1)       
+        cols.remove(col1)
         performances = performances[cols]
-        performances.to_csv(utils.PERFORMANCES_PATH, sep=utils.CSV_SEP, encoding='utf-8')
-
-        return
+        utils.dump_as_csv(content=performances, path=config.performances_path)

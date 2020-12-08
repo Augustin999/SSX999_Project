@@ -1,8 +1,13 @@
-import pandas as pd
-import pickle
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999w
 
-import utils
-import krakenAPI
+
+import pandas as pd
+
+from trader import config, krakenAPI, utils
+
 
 def buy(base, nEur, post=True):
     """
@@ -39,6 +44,7 @@ def buy(base, nEur, post=True):
 
     return price
 
+
 def sell(base, nBase, post=True):
     """
     Execute a buy order with the following specs :
@@ -72,6 +78,7 @@ def sell(base, nBase, post=True):
     krakenAPI.add_order(api_data)
     return price
 
+
 def get_price(base):
     """
     Returns the average between bid and ask, as a price.
@@ -81,42 +88,33 @@ def get_price(base):
     price = (ask + bid) / 2
     return price
 
-def save_wallet(wallet):
-    """
-    Persist the wallet.
-    """
-    pickle.dump(wallet, open(utils.WALLET_PATH,"wb"))
-    return
-
-def load_wallet():
-    """
-    Load an existing wallet.
-    """
-    return pickle.load(open(utils.WALLET_PATH, "rb"))
 
 def pull_OHLC_data(base):
     # get data from api
     data, last = krakenAPI.OHLC(base)
-    df_data = pd.DataFrame(data, columns=utils.DATA_COLUMNS)
+    df_data = pd.DataFrame(data, columns=config.DATA_COLUMNS)
     df_data = df_data.astype(float)
     df_data.set_index('time', inplace=True)
 
     # store data into csv file
     pair = utils.set_pair(base)
-    path = utils.DATA_DIR + pair + utils.PERIOD + '.csv'
-    df_data.to_csv(path, sep=utils.CSV_SEP, encoding='utf-8')
+    filename = pair + config.PERIOD + '.csv'
+    utils.dump_as_csv(content=df_data, path=config.data_dir / filename)
 
     return last
+
 
 def load_OHLC_data(base):
     """
     Load previous data corresponding to base and that is stored in csv files.
     """
     pair = utils.set_pair(base)
-    path = utils.DATA_DIR + pair + utils.PERIOD + '.csv'
-    data = pd.read_csv(path, sep=utils.CSV_SEP)
+    filename = pair + config.PERIOD + '.csv'
+    path = config.data_dir / filename
+    data = pd.read_csv(path, sep=config.CSV_SEP)
     data.set_index('time', inplace=True)
     return data
+
 
 def update_OHLC_data(base, data, last):
     """
@@ -127,7 +125,7 @@ def update_OHLC_data(base, data, last):
     new_data, new_last = krakenAPI.OHLC(base, last)
     
     #  Shape the new dataframe like the previous one
-    new_data = pd.DataFrame(new_data, columns=utils.DATA_COLUMNS)
+    new_data = pd.DataFrame(new_data, columns=config.DATA_COLUMNS)
     new_data = new_data.astype(float)
     new_data.set_index('time', inplace=True)
 
@@ -137,8 +135,8 @@ def update_OHLC_data(base, data, last):
     
     return data, new_last
 
+
 def update_OHLC_data_csv(base, data):
     pair = utils.set_pair(base)
-    path = utils.DATA_DIR + pair + utils.PERIOD + '.csv'
-    data.to_csv(path, sep=utils.CSV_SEP, encoding='utf-8')
-    return
+    filename = pair + config.PERIOD + '.csv'
+    utils.dump_as_csv(content=data, path=config.data_dir / filename)

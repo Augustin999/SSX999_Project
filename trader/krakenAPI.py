@@ -1,13 +1,21 @@
-import time as tm
-import requests as re
-import urllib
-import urllib.request as urllib2
+# SSX999 Project
+#
+# Augustin BRISSART
+# Github: @augustin999
+
+
 import base64
 import hashlib
 import hmac
 import json
+import time as tm
+import urllib
+import urllib.request as urllib2
+from pandas.core import api
+import requests as re
 
-import utils
+from trader import config, utils
+
 
 def request(api_method, api_data):
     """
@@ -15,7 +23,7 @@ def request(api_method, api_data):
     """
     api_domain = "https://api.kraken.com"
     
-    if api_method in utils.API_PRIVATE or api_method in utils.API_TRADING or api_method in utils.API_FUNDING:
+    if api_method in config.API_PRIVATE or api_method in config.API_TRADING or api_method in config.API_FUNDING:
 
         api_path = "/0/private/"
         api_uri = api_domain + api_path + api_method
@@ -24,15 +32,13 @@ def request(api_method, api_data):
         api_data = urllib.parse.urlencode(api_data)
 
         try:
-            api_key = open("API_Public_Key").read().strip()
-            api_secret = base64.b64decode(
-                open("API_Private_Key").read().strip()
-            )
+            api_key = utils.read_file(path=config.public_key)
+            api_secret_encoded = utils.read_file(path=config.private_key)
 
         except:
-            print("API public key and API private (secret) key must be in text files called API_Public_Key and API_Private_Key")
-            return
+            raise KeysConfigException()
         
+        api_secret = base64.b64decode(api_secret_encoded)
         api_postdata = api_data + '&nonce=' + api_nonce
         api_postdata = api_postdata.encode('utf-8')
         api_sha256 = hashlib.sha256(api_nonce.encode('utf-8') + api_postdata).digest()
@@ -51,7 +57,7 @@ def request(api_method, api_data):
         api_reply = json.loads(api_reply)
 
 
-    elif api_method in utils.API_PUBLIC:
+    elif api_method in config.API_PUBLIC:
         
         api_path = "/0/public/"
         api_request = re.get(
@@ -63,14 +69,25 @@ def request(api_method, api_data):
         api_reply = api_request.json()
 
     else:
-        print('Error : API method does not exist !')
-        return
+        raise ApiMethodDontExistException()
     
     if api_reply['error'] != []:
-        print(api_reply['error'])
-        return
+        raise ApiErrorException(api_reply['error'])
 
     return api_reply
+
+
+# class ApiErrorException(Exception):
+#     ...
+
+
+# class ApiMethodDontExistException(Exception):
+#     ...
+
+
+# class KeysConfigException(Exception):
+#     def __init__(self):
+#         self.message = "API public key and API private (secret) key must be in text files called API_Public_Key and API_Private_Key"
 
 
 def ticker(base):
@@ -135,6 +152,7 @@ def ticker(base):
     except:
         return ticker(base)
 
+
 def add_order(api_data):
     """
     Add standard order.
@@ -155,6 +173,7 @@ def add_order(api_data):
     api_method = 'AddOrder'
     api_reply = request(api_method, api_data)
     return api_reply
+
 
 def OHLC(base, since=0):
     """
@@ -193,7 +212,7 @@ def OHLC(base, since=0):
         pair = utils.set_pair(base)
         api_data = {
             'pair': pair,
-            'interval': utils.TIME_FRAMES[utils.PERIOD],
+            'interval': config.TIME_FRAMES[config.PERIOD],
             'since': since
         }
         api_reply = request(api_method, api_data)
